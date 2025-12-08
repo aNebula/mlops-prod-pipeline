@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pandas
+pydantic
+mlflow
+prometheus-fastapi-instrumentator
+scikit-learn
