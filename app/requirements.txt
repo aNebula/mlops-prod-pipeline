@@ -5,3 +5,4 @@ pydantic
 mlflow
 prometheus-fastapi-instrumentator
 scikit-learn
+python-dotenv
