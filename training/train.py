@@ -5,8 +5,10 @@ from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, recall_score
+from dotenv import load_dotenv
 
 # --- Configuration ---
+load_dotenv()
 MLFLOW_TRACKING_URI = os.environ['MLFLOW_TRACKING_URI']
 REGISTERED_MODEL_NAME = "IrisClassifierProduction"
 # --- 1. Set up MLflow Tracking ---
