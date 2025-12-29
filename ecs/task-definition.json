@@ -1,12 +1,10 @@
 {
     "compatibilities": [
-        "EC2",
         "FARGATE",
         "MANAGED_INSTANCES"
     ],
     "containerDefinitions": [
         {
-            "cpu": 0,
             "environment": [],
             "environmentFiles": [],
             "essential": true,

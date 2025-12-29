@@ -10,7 +10,7 @@ env:
   ECS_CLUSTER: mlops-production-cluster
   ECS_SERVICE: iris-classifier-service
   ECS_TASK_DEFINITION_FILE: ecs/task-definition.json
-  CONTAINER_NAME: iris_classifier_task-service-11fghphe
+  CONTAINER_NAME: iris-classifier-container
   MLFLOW_TRACKING_USERNAME: ${{secrets.MLFLOW_TRACKING_USERNAME}}
   MLFLOW_TRACKING_PASSWORD: ${{secrets.MLFLOW_TRACKING_PASSWORD}}
 jobs:
