@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # --- Configuration ---
 load_dotenv()
 MLFLOW_TRACKING_URI = os.environ['MLFLOW_TRACKING_URI']
-REGISTERED_MODEL_NAME = "IrisClassifierProduction"
+REGISTERED_MODEL_NAME = "IrisClassifier_STAGING"
 # --- 1. Set up MLflow Tracking ---
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 # --- 2. Load Data ---
@@ -31,21 +31,21 @@ with mlflow.start_run(run_name="Production_Candidate_Training") as run:
     model.fit(X_train, y_train)
     # --- 6. Evaluate and Log Metrics ---
     predictions = model.predict(X_test) #y_pred
-    predictions_score= model.predict_proba(X_test)[:, 1] #y_score
+    predictions_score= model.predict_proba(X_test) #y_score
 
     accuracy = accuracy_score(y_test, predictions)
     print("Model Accuracy:", accuracy)
     mlflow.log_metric("accuracy", accuracy)
     
-    recall = recall_score(y_test, predictions)
+    recall = recall_score(y_test, predictions, average='weighted')
     print("Model Recall:", recall)
     mlflow.log_metric("recall", recall)
     
-    f1 = f1_score(y_test, predictions)
+    f1 = f1_score(y_test, predictions, average='weighted')
     print("Model F1 Score:", f1)
     mlflow.log_metric("f1_score", f1)
     
-    auc = roc_auc_score(y_test, predictions_score)
+    auc = roc_auc_score(y_test, predictions_score, multi_class='ovr')
     print("Model ROC AUC:", auc)
     mlflow.log_metric("auc", auc)
 
