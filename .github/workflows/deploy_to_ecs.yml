@@ -8,7 +8,7 @@ env:
   AWS_REGION: ap-southeast-2
   ECR_REPOSITORY: mlops-iris-classifier
   ECS_CLUSTER: mlops-production-cluster
-  ECS_SERVICE: iris-classifier-service
+  ECS_SERVICE: iris_classifier_task-service-11fghphe
   ECS_TASK_DEFINITION_FILE: ecs/task-definition.json
   CONTAINER_NAME: iris-classifier-container
   MLFLOW_TRACKING_USERNAME: ${{secrets.MLFLOW_TRACKING_USERNAME}}
