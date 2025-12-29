@@ -30,16 +30,12 @@
                     "protocol": "tcp"
                 }
             ],
-            "restartPolicy": {
-                "enabled": true
-            },
             "systemControls": [],
             "ulimits": [],
             "volumesFrom": []
         }
     ],
     "cpu": "256",
-    "enableFaultInjection": false,
     "executionRoleArn": "arn:aws:iam::423452794442:role/ecsTaskExecutionRole",
     "family": "iris_classifier_task",
     "memory": "512",
