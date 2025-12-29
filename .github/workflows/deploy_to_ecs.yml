@@ -1,0 +1,84 @@
+name: Build and Deploy Model to Production on Merge to Main
+
+on:
+  push:
+    branches:
+      - main # This workflow triggers ONLY on pushes/merges to the main branch
+env:
+  AWS_REGION: ap-southeast-2
+  ECR_REPOSITORY: mlops-iris-classifier
+  ECS_CLUSTER: mlops-production-cluster
+  ECS_SERVICE: iris-classifier-service
+  ECS_TASK_DEFINITION_FILE: ecs/task-definition.json
+  CONTAINER_NAME: iris_classifier_task-service-11fghphe
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Set up Python for utility script
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Python dependencies for model download
+        run: pip install mlflow boto3
+      - name: Download "Production" stage model from MLflow Registry
+        run: |
+          # This inline Python script connects to MLflow and downloads the model
+          # currently in the "Production" stage, whatever its version number may be.
+          python -c "
+          import mlflow
+          import shutil
+          from urllib.parse import urlparse
+          # Set the remote tracking server URI
+          mlflow.set_tracking_uri('${{ secrets.MLFLOW_TRACKING_URI }}')
+          
+          # Construct the model URI to dynamically fetch the production version
+          model_name = 'IrisClassifier_PRODUCTION'
+          model_alias = 'champion'
+          model_uri = f'models:/{model_name}@{model_alias}'
+          
+          print(f'Downloading model from dynamic URI: {model_uri}')
+          
+          # Download the model artifacts
+          local_path = mlflow.artifacts.download_artifacts(artifact_uri=model_uri)
+          
+          # Prepare the build context by copying the model into the app directory
+          shutil.rmtree('./app/model', ignore_errors=True)
+          shutil.copytree(local_path, './app/model')
+          
+          print(f'Model with alias "{model_alias}" successfully baked into the build context.')
+          "
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build, tag, and push Docker image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }} # Use the unique Git commit SHA as the image tag for traceability
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./app
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - name: Render new Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION_FILE }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+      - name: Deploy new task definition to Amazon ECS service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true # Ensures a zero-downtime rolling deployment
