@@ -30,9 +30,6 @@
                     "protocol": "tcp"
                 }
             ],
-            "restartPolicy": {
-                "enabled": true
-            },
             "systemControls": [],
             "ulimits": [],
             "volumesFrom": []
